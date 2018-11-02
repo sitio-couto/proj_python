@@ -143,8 +143,8 @@ print(build_matrix.calls)
 weights, parents = floyd_warshall(weights, parents, dim)
 print(floyd_warshall.calls)
 
-combinations = combine_lifts(paths.copy(), weights).sort(key=lambda x: x[3])
-print(combine_lifts.calls)
+combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
+print(combinations)
 
 # NOTAS:
 # 1 - A inconveniência para um passageiro por estar dividindo a viagem é a
