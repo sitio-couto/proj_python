@@ -70,6 +70,8 @@ def pool_order(p1, p2, w):
     # Times without pooling
     p1_t = w[p1.s,p1.f]
     p2_t = w[p2.s,p2.f]
+    if (p1_t == inf or p2_t == inf): return [-1,inf] # If no path, return invalid
+
     #pick P1 first, drop P1 last
     pool_times.append(['A', w[p1.s,p2.s]+w[p2.s,p2.f]+w[p2.f,p1.f], w[p2.s,p2.f]])
     #pick P1 last, drop P1 last
@@ -78,6 +80,10 @@ def pool_order(p1, p2, w):
     pool_times.append(['C', w[p1.s,p2.s]+w[p2.s,p1.f], w[p2.s,p1.f]+w[p1.f,p2.f]])
     #pick last, drop first
     pool_times.append(['D', w[p1.s,p1.f], w[p2.s,p1.s]+w[p1.s,p1.f]+w[p1.f,p2.f]])
+
+    # Remove infinity wait from pools possibilities
+    pool_times = [p for p in pool_times if p[1]!=inf and p[2]!=inf]
+    if pool_times == [] : return [-1,inf] # If no pool possible,return invalid
 
     best = min(pool_times, key=lambda x: max([x[1]/p1_t, x[2]/p2_t]))
     return best[0], max([best[1]/p1_t, best[2]/p2_t])
@@ -88,40 +94,41 @@ def pool_order_ongoing(og, ra, w):
     # Times without pooling
     og_t = w[og.c,og.f] # From current node to finish
     ra_t = w[ra.s,ra.f]
+    if (og_t == inf or ra_t == inf): return [-1,inf] # If no path, return empty
+
     # Drop og first
     pool_times.append(['F', w[og.c,ra.s]+w[ra.s,og.f], w[ra.s,og.f]+w[og.f,ra.f]])
     # Drop og last
     pool_times.append(['E', w[og.c,ra.s]+w[ra.s,ra.f]+w[ra.f,og.f], w[ra.s,ra.f]])
 
+    # Remove infinity wait from pools possibilities
+    pool_times = [p for p in pool_times if p[1]!=inf and p[2]!=inf]
+    if pool_times == [] : return [-1,inf] # If no pool possible,return invalid
+
     best = min(pool_times, key=lambda x: max([x[1]/og_t, x[2]/ra_t]))
     return best[0], max([best[1]/og_t, best[2]/ra_t])
 
-def incovenience(p1, p2, wm)
-    if p1. < 0 : # If p1 is ongoing
-        pool_order('p1',p1,p2,wm)
 
-         min([wm[p1.mid,p2.start]+wm[p2.start,]/wm[]]) # Drop P2 after P1
-        return
-    elif p2[1] < 0 : # If p2 is ongoing
-        incovenience()
-    else: # If none are ongoing
-        incovenience()
+@return_decorator
+def combine_lifts(paths, weights, result=[]):
+    if(paths == []): return result       # Recursion base case
+    p1 = paths.pop(0)                    # Remove p1 from list
+    result.append([p1.id, -1, '#', inf]) # Add p1 traveling alone in case theres no pair available/possible
 
-def combine_passengers(result, paths, weights):
-    if(len(paths) == 1):
-        return result
-    else:
-        p1 = paths.pop()
-        for p2 in paths:
-            # Add p1 traveling alone in case theres no pair available/possible
-            result.append([p1.id, -1, inf])
-            # If both passenger are already traveling, do not combine
-            if p1[2]*p2[2] > 0 : continue
-            # If inconvenience > 1.4, do not combine
-            incv = incovenience(p1, p2, weights)
-            if incv <= 1.4: result.append([p1.id,p2.id,incv])
+    for p2 in paths:
+        if p1.c >= 0 and p2.c >= 0 : # If both are already traveling, skip
+            continue
+        elif p1.c >= 0 :   # If only p1 is ongoing
+            type, incv = pool_order_ongoing(p1,p2,weights)
+        elif p2.c >= 0 :   # If only p2 is ongoing
+            type, incv = pool_order_ongoing(p2,p1,weights)
+        else:              # If none are ongoing
+            type, incv = pool_order(p1, p2, weights)
 
-    return
+        if incv <= 1.4:    # If inconvenience > 1.4, do not add
+            result.append([p1.id, p2.id, type, incv])
+
+    return combine_lifts(paths, weights, result)
 
 # MAIN #########################################################################
 
@@ -136,7 +143,8 @@ print(build_matrix.calls)
 weights, parents = floyd_warshall(weights, parents, dim)
 print(floyd_warshall.calls)
 
-# combine_passengers()
+combinations = combine_lifts(paths.copy(), weights).sort(key=lambda x: x[3])
+print(combine_lifts.calls)
 
 # NOTAS:
 # 1 - A inconveniência para um passageiro por estar dividindo a viagem é a
