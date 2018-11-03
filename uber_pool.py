@@ -64,6 +64,17 @@ def read_input( ):
 
     return weight_data, pool_data
 
+# This function is responsoble for calculating the inconvenience of all possible
+# paths permutations (EX: pick P1, pick P2, drop P2 and then drop P1).
+# It also finds the least inconvenient path by minimizing the maximum inconvenience
+# of each pair of passengers.
+# Arguments:
+#   p1 - Passenger (Rider class instance)
+#   p2 - Paired passenger (Rider class instance)
+#   w  - Cost of each path
+# Return:
+#   best[0]  - Path permutation used
+#   max(...) - Max inconvenience of the passengers for the most convenient path
 def pool_order(p1, p2, w):
     pool_times = []
 
@@ -88,6 +99,17 @@ def pool_order(p1, p2, w):
     best = min(pool_times, key=lambda x: max([x[1]/p1_t, x[2]/p2_t]))
     return best[0], max([best[1]/p1_t, best[2]/p2_t])
 
+# This function is responsible for calculating the inconvenience of all possible
+# paths permutations, considering one passenger is already travelling.
+# It also finds the least inconvenient path by minimizing the maximum inconvenience
+# of each pair of passengers.
+# Arguments:
+#   og - Ongoing passenger (already travelling)
+#   ra - Ride along passenger (possible lift)
+#   w  - Cost of each path
+# Return:
+#   best[0]  - Path permutation used
+#   max(...) - Max inconvenience of the passengers for the most convenient path
 def pool_order_ongoing(og, ra, w):
     pool_times = []
 
@@ -96,9 +118,9 @@ def pool_order_ongoing(og, ra, w):
     ra_t = w[ra.s,ra.f]
     if (og_t == inf or ra_t == inf): return [-1,inf] # If no path, return empty
 
-    # Drop og first
+    # Drop og first and ra last
     pool_times.append(['F', w[og.c,ra.s]+w[ra.s,og.f], w[ra.s,og.f]+w[og.f,ra.f]])
-    # Drop og last
+    # Drop og last and ra first
     pool_times.append(['E', w[og.c,ra.s]+w[ra.s,ra.f]+w[ra.f,og.f], w[ra.s,ra.f]])
 
     # Remove infinity wait from pools possibilities
@@ -109,7 +131,14 @@ def pool_order_ongoing(og, ra, w):
     return best[0], max([best[1]/og_t, best[2]/ra_t])
 
 
-@return_decorator
+# This function combines all passengers with all others, returning all the
+# valid lifts (considering the inconvenience and possible permutations of
+# the path used for the travel).
+# Arguments:
+#   paths   - origin and destination of each passenger
+#   weights - best path or all vertices to all vertices
+#   result  - possible combinarions of passengers
+# Return - possible combinarions of passengers
 def combine_lifts(paths, weights, result=[]):
     if(paths == []): return result       # Recursion base case
     p1 = paths.pop(0)                    # Remove p1 from list
@@ -130,21 +159,43 @@ def combine_lifts(paths, weights, result=[]):
 
     return combine_lifts(paths, weights, result)
 
+# This function reduces the amount of combinations calculated by selecting the
+# the most convenient pair of passengers and path, and removing any remaining
+# combination associated to them (EX: any other path containing A and B should
+# be removed from comb).
+# Arguments:
+#   comb - Passengers combination sorted by inconvenience (ascending from top-bottom)
+# Return - Less inconvenient set of trips containing all passengers
+def reduce(comb, result=[]):
+    if comb == []: return result # Recursion base case
+    # Takes first element from combinations
+    aux = comb.pop(0)
+    result.append(aux)
+    p1 = aux[0]
+    p2 = aux[1]
+    # Removes any combination with the same passenger
+    if p1 > -1 : comb = [x for x in comb if x[0] != p1]
+    if p2 > -1 : comb = [x for x in comb if x[1] != p2]
+
+    return reduce(comb, result)
+
 # MAIN #########################################################################
 
 weights, paths = read_input()
-print(read_input.calls)
-print("Riders data:")
-for x in paths: print(x)
+# print(read_input.calls)
+# print("Riders data:")
+# for x in paths: print(x)
 
 weights, parents, dim = build_matrix(weights)
-print(build_matrix.calls)
+# print(build_matrix.calls)
 
 weights, parents = floyd_warshall(weights, parents, dim)
-print(floyd_warshall.calls)
+# print(floyd_warshall.calls)
 
 combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
+combinations = reduce(combinations)
 print(combinations)
+
 
 # NOTAS:
 # 1 - A inconveniência para um passageiro por estar dividindo a viagem é a
