@@ -181,6 +181,11 @@ def reduce(comb, result=[]):
 
 # This function translates the paths permutation into a array wich represents
 # each stop (pick or drop) in the optimal order.
+# Arguments:
+# Type - char that indicates path permutations
+# p1   - First passenger data (Rider class)
+# p2   - Second passenger data (Rider class)
+# Return: optimal path permutations
 def getOrder(type, p1, p2):
     return {
         'A':[p1.s,p2.s,p2.f,p1.f],
@@ -190,6 +195,7 @@ def getOrder(type, p1, p2):
         'E':[p1.s,p2.s,p1.f,p2.f],
         'F':[p1.s,p2.s,p2.f,p1.f],
     }.get(type)
+
 # MAIN #########################################################################
 
 weights, paths = read_input()
