@@ -89,7 +89,7 @@ def pool_order(p1, p2, w):
     pool_times.append(['B', w[p1.s,p2.f]+w[p2.f,p1.f], w[p2.s,p1.s]+w[p1.s,p2.f]])
     #pick P1 first, drop P1 first
     pool_times.append(['C', w[p1.s,p2.s]+w[p2.s,p1.f], w[p2.s,p1.f]+w[p1.f,p2.f]])
-    #pick last, drop first
+    #pick P1 last, drop P1 first
     pool_times.append(['D', w[p1.s,p1.f], w[p2.s,p1.s]+w[p1.s,p1.f]+w[p1.f,p2.f]])
 
     # Remove infinity wait from pools possibilities
@@ -97,7 +97,7 @@ def pool_order(p1, p2, w):
     if pool_times == [] : return [-1,inf] # If no pool possible,return invalid
 
     best = min(pool_times, key=lambda x: max([x[1]/p1_t, x[2]/p2_t]))
-    return best[0], max([best[1]/p1_t, best[2]/p2_t])
+    return getOrder(best[0], p1, p2), max([best[1]/p1_t, best[2]/p2_t])
 
 # This function is responsible for calculating the inconvenience of all possible
 # paths permutations, considering one passenger is already travelling.
@@ -128,7 +128,7 @@ def pool_order_ongoing(og, ra, w):
     if pool_times == [] : return [-1,inf] # If no pool possible,return invalid
 
     best = min(pool_times, key=lambda x: max([x[1]/og_t, x[2]/ra_t]))
-    return best[0], max([best[1]/og_t, best[2]/ra_t])
+    return getOrder(best[0], og, ra), max([best[1]/og_t, best[2]/ra_t])
 
 
 # This function combines all passengers with all others, returning all the
@@ -142,20 +142,20 @@ def pool_order_ongoing(og, ra, w):
 def combine_lifts(paths, weights, result=[]):
     if(paths == []): return result       # Recursion base case
     p1 = paths.pop(0)                    # Remove p1 from list
-    result.append([p1.id, -1, '#', inf]) # Add p1 traveling alone in case theres no pair available/possible
+    result.append([p1.id, -1, [p1.s,p1.f], inf]) # Add p1 traveling alone in case theres no pair available/possible
 
     for p2 in paths:
         if p1.c >= 0 and p2.c >= 0 : # If both are already traveling, skip
             continue
         elif p1.c >= 0 :   # If only p1 is ongoing
-            type, incv = pool_order_ongoing(p1,p2,weights)
+            order, incv = pool_order_ongoing(p1,p2,weights)
         elif p2.c >= 0 :   # If only p2 is ongoing
-            type, incv = pool_order_ongoing(p2,p1,weights)
+            order, incv = pool_order_ongoing(p2,p1,weights)
         else:              # If none are ongoing
-            type, incv = pool_order(p1, p2, weights)
+            order, incv = pool_order(p1, p2, weights)
 
         if incv <= 1.4:    # If inconvenience > 1.4, do not add
-            result.append([p1.id, p2.id, type, incv])
+            result.append([p1.id, p2.id, order, incv])
 
     return combine_lifts(paths, weights, result)
 
@@ -179,6 +179,17 @@ def reduce(comb, result=[]):
 
     return reduce(comb, result)
 
+# This function translates the paths permutation into a array wich represents
+# each stop (pick or drop) in the optimal order.
+def getOrder(type, p1, p2):
+    return {
+        'A':[p1.s,p2.s,p2.f,p1.f],
+        'B':[p2.s,p1.s,p2.f,p1.f],
+        'C':[p1.s,p2.s,p1.f,p2.f],
+        'D':[p2.s,p1.s,p1.f,p2.f],
+        'E':[p1.s,p2.s,p1.f,p2.f],
+        'F':[p1.s,p2.s,p2.f,p1.f],
+    }.get(type)
 # MAIN #########################################################################
 
 weights, paths = read_input()
