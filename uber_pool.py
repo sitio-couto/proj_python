@@ -181,6 +181,11 @@ def reduce(comb, result=[]):
 
 # This function translates the paths permutation into a array wich represents
 # each stop (pick or drop) in the optimal order.
+# Arguments:
+# type - Char wich indicates the order of picks and drops
+# p1   - passenger data (Rider class)
+# p2   - passenger data (Rider class)
+# Return - Array with vertices in the permutation order
 def getOrder(type, p1, p2):
     return {
         'A':[p1.s,p2.s,p2.f,p1.f],
@@ -205,6 +210,9 @@ weights, parents = floyd_warshall(weights, parents, dim)
 
 combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
 combinations = reduce(combinations)
+
+print_output(combinations)
+
 print(combinations)
 
 
