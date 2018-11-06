@@ -46,7 +46,7 @@ def floyd_warshall(w, p, dim):
 
 @return_decorator
 def read_input( ):
-    id = 0             # Passenger ID
+    id = 1             # Passenger ID
     weight_data = []   # Vertices and weights
     pool_data = []     # Passengers path data
 
@@ -97,7 +97,7 @@ def pool_order(p1, p2, w):
     if pool_times == [] : return [-1,inf] # If no pool possible,return invalid
 
     best = min(pool_times, key=lambda x: max([x[1]/p1_t, x[2]/p2_t]))
-    return getOrder(best[0], p1, p2), max([best[1]/p1_t, best[2]/p2_t])
+    return get_order(best[0], p1, p2), max([best[1]/p1_t, best[2]/p2_t])
 
 # This function is responsible for calculating the inconvenience of all possible
 # paths permutations, considering one passenger is already travelling.
@@ -128,7 +128,7 @@ def pool_order_ongoing(og, ra, w):
     if pool_times == [] : return [-1,inf] # If no pool possible,return invalid
 
     best = min(pool_times, key=lambda x: max([x[1]/og_t, x[2]/ra_t]))
-    return getOrder(best[0], og, ra), max([best[1]/og_t, best[2]/ra_t])
+    return get_order(best[0], og, ra), max([best[1]/og_t, best[2]/ra_t])
 
 
 # This function combines all passengers with all others, returning all the
@@ -186,7 +186,7 @@ def reduce(comb, result=[]):
 # p1   - passenger data (Rider class)
 # p2   - passenger data (Rider class)
 # Return - Array with vertices in the permutation order
-def getOrder(type, p1, p2):
+def get_order(type, p1, p2):
     return {
         'A':[p1.s,p2.s,p2.f,p1.f],
         'B':[p2.s,p1.s,p2.f,p1.f],
@@ -195,6 +195,29 @@ def getOrder(type, p1, p2):
         'E':[p1.s,p2.s,p1.f,p2.f],
         'F':[p1.s,p2.s,p2.f,p1.f],
     }.get(type)
+
+def print_output(comb, wm, pm):
+
+    while comb != [] :
+        data = comb.pop(0)
+        if data[1] == -1 : print("Passenger ", data[0], " alone")
+        else : print("Passenger ", data[0], " and ", data[1])
+        path, cost = backtrack(data[2], wm, pm)
+        print("Path:", path, "\nCost: ", cost)
+
+def backtrack(nodes, wm, pm):
+    cost = 0
+    i = nodes.pop()
+    path = str(i)
+    while nodes != [] :
+        end = i
+        i = nodes.pop()
+        while i != end :
+            path = str(int(pm[i,end])) + " " + path
+            cost += wm[i,end]
+            end = int(pm[i,end])
+
+    return path, cost
 # MAIN #########################################################################
 
 weights, paths = read_input()
@@ -206,12 +229,12 @@ weights, parents, dim = build_matrix(weights)
 # print(build_matrix.calls)
 
 weights, parents = floyd_warshall(weights, parents, dim)
-# print(floyd_warshall.calls)
+print(floyd_warshall.calls)
 
 combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
 combinations = reduce(combinations)
 
-print_output(combinations)
+print_output(combinations, weights, parents)
 
 print(combinations)
 
