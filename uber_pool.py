@@ -118,10 +118,10 @@ def pool_order_ongoing(og, ra, w):
     ra_t = w[ra.s,ra.f]
     if (og_t == inf or ra_t == inf): return [-1,inf] # If no path, return empty
 
-    # Drop og first and ra last
-    pool_times.append(['F', w[og.c,ra.s]+w[ra.s,og.f], w[ra.s,og.f]+w[og.f,ra.f]])
-    # Drop og last and ra first
+    # Drop og last
     pool_times.append(['E', w[og.c,ra.s]+w[ra.s,ra.f]+w[ra.f,og.f], w[ra.s,ra.f]])
+    # Drop og first
+    pool_times.append(['F', w[og.c,ra.s]+w[ra.s,og.f], w[ra.s,og.f]+w[og.f,ra.f]])
 
     # Remove infinity wait from pools possibilities
     pool_times = [p for p in pool_times if p[1]!=inf and p[2]!=inf]
@@ -142,7 +142,9 @@ def pool_order_ongoing(og, ra, w):
 def combine_lifts(paths, weights, result=[]):
     if(paths == []): return result       # Recursion base case
     p1 = paths.pop(0)                    # Remove p1 from list
-    result.append([p1.id, -1, [p1.s,p1.f], inf]) # Add p1 traveling alone in case theres no pair available/possible
+
+    if p1.c < 0 : result.append([p1.id, -1, [p1.s,p1.f], inf]) # Add p1 traveling alone
+    else : result.append([p1.id, -1, [p1.c,p1.f], inf])        # Add p1 traveling alone and ongoing
 
     for p2 in paths:
         if p1.c >= 0 and p2.c >= 0 : # If both are already traveling, skip
@@ -192,8 +194,8 @@ def get_order(type, p1, p2):
         'B':[p2.s,p1.s,p2.f,p1.f],
         'C':[p1.s,p2.s,p1.f,p2.f],
         'D':[p2.s,p1.s,p1.f,p2.f],
-        'E':[p1.s,p2.s,p1.f,p2.f],
-        'F':[p1.s,p2.s,p2.f,p1.f],
+        'E':[p1.c,p2.s,p2.f,p1.f],
+        'F':[p1.c,p2.s,p1.f,p2.f],
     }.get(type)
 
 def print_output(comb, wm, pm):
@@ -206,6 +208,7 @@ def print_output(comb, wm, pm):
         print("Path:", path, "\nCost: ", cost)
 
 def backtrack(nodes, wm, pm):
+    print(nodes)
     cost = 0
     i = nodes.pop()
     path = str(i)
@@ -235,9 +238,6 @@ combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
 combinations = reduce(combinations)
 
 print_output(combinations, weights, parents)
-
-print(combinations)
-
 
 # NOTAS:
 # 1 - A inconveniência para um passageiro por estar dividindo a viagem é a
