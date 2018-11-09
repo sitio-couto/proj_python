@@ -176,8 +176,8 @@ def reduce(comb, result=[]):
     p1 = aux[0]
     p2 = aux[1]
     # Removes any combination with the same passenger
-    if p1 > -1 : comb = [x for x in comb if x[0] != p1]
-    if p2 > -1 : comb = [x for x in comb if x[1] != p2]
+    comb = [x for x in comb if x[0] != p1 and x[1] != p1]
+    if p2 > -1 : comb = [x for x in comb if x[0] != p2 and x[1] != p2]
 
     return reduce(comb, result)
 
@@ -194,8 +194,8 @@ def get_order(type, p1, p2):
         'B':[p2.s,p1.s,p2.f,p1.f],
         'C':[p1.s,p2.s,p1.f,p2.f],
         'D':[p2.s,p1.s,p1.f,p2.f],
-        'E':[p1.c,p2.s,p2.f,p1.f],
-        'F':[p1.c,p2.s,p1.f,p2.f],
+        'E':[p1.s,p1.c,p2.s,p2.f,p1.f],
+        'F':[p1.s,p1.c,p2.s,p1.f,p2.f],
     }.get(type)
 
 def print_output(comb, wm, pm):
@@ -205,11 +205,10 @@ def print_output(comb, wm, pm):
         if data[1] == -1 : print("Passenger ", data[0], " alone")
         else : print("Passenger ", data[0], " and ", data[1])
         path, cost = backtrack(data[2], wm, pm)
-        print("Path:", path, "\nCost: ", cost)
+        print("Path:", path, "\nCost: ", cost, "\n")
 
 def backtrack(nodes, wm, pm):
     cost = 0
-    print(nodes)
     s = nodes.pop()
     path = str(s)
     while nodes != [] :
@@ -236,8 +235,8 @@ weights, parents = floyd_warshall(weights, parents, dim)
 print(floyd_warshall.calls)
 
 combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
-print(combinations)
 combinations = reduce(combinations)
+print(combinations)
 
 print_output(combinations, weights, parents)
 
