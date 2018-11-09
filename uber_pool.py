@@ -208,17 +208,17 @@ def print_output(comb, wm, pm):
         print("Path:", path, "\nCost: ", cost)
 
 def backtrack(nodes, wm, pm):
-    print(nodes)
     cost = 0
-    i = nodes.pop()
-    path = str(i)
+    print(nodes)
+    s = nodes.pop()
+    path = str(s)
     while nodes != [] :
-        end = i
-        i = nodes.pop()
-        while i != end :
-            path = str(int(pm[i,end])) + " " + path
-            cost += wm[i,end]
-            end = int(pm[i,end])
+        f = s
+        s = nodes.pop()
+        cost += wm[s,f]
+        while f != s :
+            f = int(pm[s,f])
+            path = str(f) + " " + path
 
     return path, cost
 
@@ -236,6 +236,7 @@ weights, parents = floyd_warshall(weights, parents, dim)
 print(floyd_warshall.calls)
 
 combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
+print(combinations)
 combinations = reduce(combinations)
 
 print_output(combinations, weights, parents)
