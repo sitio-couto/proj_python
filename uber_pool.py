@@ -14,9 +14,9 @@ class return_decorator():
 class Rider():
     def __init__(self, id, data):
         self.id = id                  # passenger id
-        self.s, self.c, self.f = data # start, current and finishing vertices
+        self.s, self.f, self.c = data # start, current and finishing vertices
     def __str__(self):
-        return str([self.id, self.s, self.c, self.f])
+        return str([self.id, self.s, self.f, self.c])
 
 @return_decorator
 def build_matrix(data):
@@ -58,7 +58,7 @@ def read_input( ):
     line = stdin.readline()[:-1].split(' ')
     while (line != ['']):                   # Read second chunck of text (paths)
         if (len(line) == 3): pool_data.append(Rider(id,[int(x) for x in line]))
-        else: pool_data.append(Rider(id,[int(line[0]),-1,int(line[1])]))
+        else: pool_data.append(Rider(id,[int(line[0]),int(line[1]),-1]))
         line = stdin.readline()[:-1].split(' ')
         id += 1
 
