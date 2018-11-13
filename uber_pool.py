@@ -1,16 +1,6 @@
 from sys import stdin
 from numpy import matrix, inf, ones
 
-class return_decorator():
-    def __init__(self, f):
-        self.f = f
-        self.calls = "\n"
-    def __call__(self, *args):
-        ret = self.f(*args)
-        self.calls += "Function: "+self.f.__name__+"\nReturn:\n"
-        for r in enumerate(ret): self.calls += str(r[1])+"\n"
-        return ret
-
 class Rider():
     def __init__(self, id, data):
         self.id = id                  # passenger id
@@ -18,7 +8,7 @@ class Rider():
     def __str__(self):
         return str([self.id, self.s, self.f, self.c])
 
-@return_decorator
+
 def build_matrix(data):
     dim = max([max(d[:-1]) for d in data]) + 1 #Get matrix dimension
     pmtx = matrix(ones((dim,dim))*inf)         #Initialize parents with inf
@@ -33,7 +23,7 @@ def build_matrix(data):
 
     return wmtx, pmtx, dim                     #Returns weigths, parents and dimension
 
-@return_decorator
+
 def floyd_warshall(w, p, dim):
     for k in range(dim):
         for i in range(dim):
@@ -44,7 +34,7 @@ def floyd_warshall(w, p, dim):
 
     return w, p
 
-@return_decorator
+
 def read_input( ):
     id = 1             # Passenger ID
     weight_data = []   # Vertices and weights
@@ -202,10 +192,11 @@ def print_output(comb, wm, pm):
 
     while comb != [] :
         data = comb.pop(0)
-        if data[1] == -1 : print("Passenger ", data[0], " alone")
-        else : print("Passenger ", data[0], " and ", data[1])
-        path, cost = backtrack(data[2], wm, pm)
-        print("Path:", path, "\nCost: ", cost, "\n")
+        path, cost = "", 0
+        # path, cost = backtrack(data[2], wm, pm)
+        for x in data[2]: path += " " + str(x)
+        if data[1] == -1 : print("passageiros:", data[0], "percurso:", path)
+        else : print("passageiros:", data[0], data[1],"percurso:", path)
 
 def backtrack(nodes, wm, pm):
     cost = 0
@@ -224,19 +215,13 @@ def backtrack(nodes, wm, pm):
 # MAIN #########################################################################
 
 weights, paths = read_input()
-# print(read_input.calls)
-# print("Riders data:")
-# for x in paths: print(x)
 
 weights, parents, dim = build_matrix(weights)
-# print(build_matrix.calls)
 
 weights, parents = floyd_warshall(weights, parents, dim)
-print(floyd_warshall.calls)
 
 combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
 combinations = reduce(combinations)
-print(combinations)
 
 print_output(combinations, weights, parents)
 
