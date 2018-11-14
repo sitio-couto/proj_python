@@ -184,8 +184,8 @@ def get_order(type, p1, p2):
         'B':[p2.s,p1.s,p2.f,p1.f],
         'C':[p1.s,p2.s,p1.f,p2.f],
         'D':[p2.s,p1.s,p1.f,p2.f],
-        'E':[p1.s,p1.c,p2.s,p2.f,p1.f],
-        'F':[p1.s,p1.c,p2.s,p1.f,p2.f],
+        'E':[p1.c,p2.s,p2.f,p1.f],
+        'F':[p1.c,p2.s,p1.f,p2.f],
     }.get(type)
 
 def print_output(comb, wm, pm):
