@@ -1,3 +1,6 @@
+# VINICIUS COUTO ESPINDOLA | RA: 188115
+# LUCIANO GIGANTELLI ZAGO  | RA: 182835
+
 from sys import stdin
 from numpy import matrix, inf, ones
 
@@ -71,7 +74,7 @@ def pool_order(p1, p2, w):
     # Times without pooling
     p1_t = w[p1.s,p1.f]
     p2_t = w[p2.s,p2.f]
-    if (p1_t == inf or p2_t == inf): return [-1,inf] # If no path, return invalid
+    if (p1_t == inf or p2_t == inf): return ["",-1,inf] # If no path, return invalid
 
     #pick P1 first, drop P1 last
     pool_times.append(['A', w[p1.s,p2.s]+w[p2.s,p2.f]+w[p2.f,p1.f], w[p2.s,p2.f]])
@@ -84,10 +87,10 @@ def pool_order(p1, p2, w):
 
     # Remove infinity wait from pools possibilities
     pool_times = [p for p in pool_times if p[1]!=inf and p[2]!=inf]
-    if pool_times == [] : return [-1,inf] # If no pool possible,return invalid
+    if pool_times == [] : return ["",-1,inf] # If no pool possible,return invalid
 
     best = min(pool_times, key=lambda x: max([x[1]/p1_t, x[2]/p2_t]))
-    return get_order(best[0], p1, p2), max([best[1]/p1_t, best[2]/p2_t])
+    return best[0], get_order(best[0], p1, p2), max([best[1]/p1_t, best[2]/p2_t])
 
 # This function is responsible for calculating the inconvenience of all possible
 # paths permutations, considering one passenger is already travelling.
@@ -106,7 +109,7 @@ def pool_order_ongoing(og, ra, w):
     # Times without pooling
     og_t = w[og.c,og.f] # From current node to finish
     ra_t = w[ra.s,ra.f]
-    if (og_t == inf or ra_t == inf): return [-1,inf] # If no path, return empty
+    if (og_t == inf or ra_t == inf): return ["",-1,inf] # If no path, return empty
 
     # Drop og last
     pool_times.append(['E', w[og.c,ra.s]+w[ra.s,ra.f]+w[ra.f,og.f], w[ra.s,ra.f]])
@@ -115,10 +118,10 @@ def pool_order_ongoing(og, ra, w):
 
     # Remove infinity wait from pools possibilities
     pool_times = [p for p in pool_times if p[1]!=inf and p[2]!=inf]
-    if pool_times == [] : return [-1,inf] # If no pool possible,return invalid
+    if pool_times == [] : return ["",-1,inf] # If no pool possible,return invalid
 
     best = min(pool_times, key=lambda x: max([x[1]/og_t, x[2]/ra_t]))
-    return get_order(best[0], og, ra), max([best[1]/og_t, best[2]/ra_t])
+    return best[0], get_order(best[0], og, ra), max([best[1]/og_t, best[2]/ra_t])
 
 
 # This function combines all passengers with all others, returning all the
@@ -133,21 +136,21 @@ def combine_lifts(paths, weights, result=[]):
     if(paths == []): return result       # Recursion base case
     p1 = paths.pop(0)                    # Remove p1 from list
 
-    if p1.c < 0 : result.append([p1.id, -1, [p1.s,p1.f], inf]) # Add p1 traveling alone
-    else : result.append([p1.id, -1, [p1.c,p1.f], inf])        # Add p1 traveling alone and ongoing
+    if p1.c < 0 : result.append([p1.id, -1, '#', [p1.s,p1.f], inf]) # Add p1 traveling alone
+    else : result.append([p1.id, -1, '#',[p1.c,p1.f], inf])        # Add p1 traveling alone and ongoing
 
     for p2 in paths:
         if p1.c >= 0 and p2.c >= 0 : # If both are already traveling, skip
             continue
         elif p1.c >= 0 :   # If only p1 is ongoing
-            order, incv = pool_order_ongoing(p1,p2,weights)
+            type, order, incv = pool_order_ongoing(p1,p2,weights)
         elif p2.c >= 0 :   # If only p2 is ongoing
-            order, incv = pool_order_ongoing(p2,p1,weights)
+            type, order, incv = pool_order_ongoing(p2,p1,weights)
         else:              # If none are ongoing
-            order, incv = pool_order(p1, p2, weights)
+            type, order, incv = pool_order(p1, p2, weights)
 
         if incv <= 1.4:    # If inconvenience > 1.4, do not add
-            result.append([p1.id, p2.id, order, incv])
+            result.append([p1.id, p2.id, type, order, incv])
 
     return combine_lifts(paths, weights, result)
 
@@ -193,24 +196,14 @@ def print_output(comb, wm, pm):
     while comb != [] :
         data = comb.pop(0)
         path, cost = "", 0
-        # path, cost = backtrack(data[2], wm, pm)
-        for x in data[2]: path += " " + str(x)
-        if data[1] == -1 : print("passageiros:", data[0], "percurso:", path)
-        else : print("passageiros:", data[0], data[1],"percurso:", path)
+        for x in data[3]: path += " " + str(x)
 
-def backtrack(nodes, wm, pm):
-    cost = 0
-    s = nodes.pop()
-    path = str(s)
-    while nodes != [] :
-        f = s
-        s = nodes.pop()
-        cost += wm[s,f]
-        while f != s :
-            f = int(pm[s,f])
-            path = str(f) + " " + path
-
-    return path, cost
+        if data[2] == "#":
+            print("passageiros:", data[0], "percurso:", path)
+        elif data[2] in "ACEF":
+             print("passageiros:", data[0], data[1], "percurso:", path)
+        else:
+            print("passageiros:", data[1], data[0],"percurso:", path)
 
 # MAIN #########################################################################
 
@@ -220,23 +213,7 @@ weights, parents, dim = build_matrix(weights)
 
 weights, parents = floyd_warshall(weights, parents, dim)
 
-combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[3])
+combinations = sorted(combine_lifts(paths.copy(), weights), key=lambda x: x[4])
 combinations = reduce(combinations)
 
 print_output(combinations, weights, parents)
-
-# NOTAS:
-# 1 - A inconveniência para um passageiro por estar dividindo a viagem é a
-# razão do tempo da viagem com carona pelo tempo da viagem sem carona.
-# 2 - A uber minimiza o máximo da inconveniência para os 2 passageiros.
-# 3 - Inconveniência máxima para um passageiro é 1.4, ou seja, usando a carona,
-# nunca voce terá um acréscimo maior que 40% no tempo de viagem.
-# 4 - Escolhe o percurso de menor inconveniência máxima no caso de mutiplas
-# possibilidades.
-# 5 - No máximo 2 passageiros farão uma viagem compartilhada.
-# 6 - Viagens em anadamento:
-#     - Dois passageiros com viagem em anadamento nao compartilham carona.
-#     - Para o passageiro 1 a inconveniencia deve ser calculada usando o tempo
-#       restante da viagem e não o tempo total.
-#     - Ela ja começou em A, (esta agora em X) e portanto os únicos 2 percursos
-#       possíveis são A,X,C,B,D ou A,X,C,D,B (limita percurso possivel para saida).
