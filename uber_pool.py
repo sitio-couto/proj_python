@@ -1,7 +1,7 @@
 # VINICIUS COUTO ESPINDOLA | RA: 188115
 # LUCIANO GIGANTELLI ZAGO  | RA: 182835
 
-from sys import stdin
+from sys import argv
 from numpy import matrix, inf, ones
 
 class Rider():
@@ -43,16 +43,18 @@ def read_input( ):
     weight_data = []   # Vertices and weights
     pool_data = []     # Passengers path data
 
-    line = stdin.readline()[:-1].split(' ') # Processed line
+    file = open(argv[1], "r")
+
+    line = file.readline()[:-1].split(' ') # Processed line
     while (line != ['']):                   # Read first chunk of text (weights)
         weight_data.append([int(line[0]),int(line[1]),float(line[2])])
-        line = stdin.readline()[:-1].split(' ')
+        line = file.readline()[:-1].split(' ')
 
-    line = stdin.readline()[:-1].split(' ')
+    line = file.readline()[:-1].split(' ')
     while (line != ['']):                   # Read second chunck of text (paths)
         if (len(line) == 3): pool_data.append(Rider(id,[int(x) for x in line]))
         else: pool_data.append(Rider(id,[int(line[0]),int(line[1]),-1]))
-        line = stdin.readline()[:-1].split(' ')
+        line = file.readline()[:-1].split(' ')
         id += 1
 
     return weight_data, pool_data
@@ -199,11 +201,11 @@ def print_output(comb, wm, pm):
         for x in data[3]: path += " " + str(x)
 
         if data[2] == "#":
-            print("passageiros:", data[0], "percurso:", path)
+            print("passageiro:", data[0], "percurso:", path)
         elif data[2] in "ACEF":
-             print("passageiros:", data[0], data[1], "percurso:", path)
+             print("passageiros:", data[0], "e", data[1], "percurso:", path)
         else:
-            print("passageiros:", data[1], data[0],"percurso:", path)
+            print("passageiros:", data[1], "e", data[0],"percurso:", path)
 
 # MAIN #########################################################################
 
